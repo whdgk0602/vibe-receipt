@@ -173,7 +173,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       onSelect: (t) =>
                           ref.read(receiptThemeProvider.notifier).setTheme(t),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 8),
+                    _ThemeDescription(selected: currentTheme),
+                    const SizedBox(height: 16),
 
                     // 옵션 추가 토글
                     _OptionToggle(
@@ -329,6 +331,36 @@ class _OptionToggle extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── 테마 설명 ───────────────────────────────────────────────────────
+
+class _ThemeDescription extends StatelessWidget {
+  final ReceiptTheme selected;
+
+  const _ThemeDescription({required this.selected});
+
+  static const _descriptions = {
+    ReceiptTheme.classic: '측정 무드에 따라 색상이 바뀌는 그라데이션 영수증이에요',
+    ReceiptTheme.dark: '차콜 블랙 배경의 시크하고 무드 있는 영수증이에요',
+    ReceiptTheme.kraft: '브라운 크래프트지 느낌의 따뜻하고 빈티지한 영수증이에요',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child: Text(
+        _descriptions[selected]!,
+        key: ValueKey(selected),
+        style: GoogleFonts.notoSansKr(
+          fontSize: 12,
+          color: AppColors.secondary,
+          height: 1.5,
         ),
       ),
     );
