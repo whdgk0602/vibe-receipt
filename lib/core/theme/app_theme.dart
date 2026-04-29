@@ -59,7 +59,7 @@ class AppTheme {
     );
   }
 
-  /// 영수증 전용: 모노스페이스 타자기 폰트 (VT323 / Courier Prime)
+  /// 영수증 전용: 모노스페이스 타자기 폰트 (Courier Prime)
   static TextStyle receiptFont({
     double size = 14,
     FontWeight weight = FontWeight.w400,

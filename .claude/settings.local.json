@@ -5,7 +5,13 @@
       "Bash(flutter analyze *)",
       "Bash(dart analyze *)",
       "Bash(flutter build *)",
-      "Bash(dart run *)"
+      "Bash(dart run *)",
+      "Bash(git check-ignore *)",
+      "Bash(mv \"온보딩1.jpg\" \"onboarding1.jpg\")",
+      "Bash(mv \"온보딩2.jpg\" \"onboarding2.jpg\")",
+      "Bash(mv \"온보딩3.jpg\" \"onboarding3.jpg\")",
+      "Bash(mv \"홈 화면.jpg\" \"home.jpg\")",
+      "Bash(mv \"홈 화면_영수증 입력.jpg\" \"home_input.jpg\")"
     ]
   }
 }
