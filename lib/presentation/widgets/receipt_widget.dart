@@ -178,6 +178,7 @@ class ReceiptWidget extends StatelessWidget {
                   painter: BarcodePainter(
                     color: textColor,
                     seed: d.measuredAt.millisecondsSinceEpoch,
+                    mood: receipt.mood,
                   ),
                 ),
                 const SizedBox(height: 6),

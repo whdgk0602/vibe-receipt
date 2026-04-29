@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 
-/// 무드 카테고리 정의
-/// 각 무드는 (라벨 / 파스텔 그라데이션 2색 / 감성 문구 리스트)를 가짐
 enum VibeMood {
-  sentimental, // 감성
-  joyful,      // 즐거움
-  calm,        // 차분
-  energetic,   // 활기
-  dreamy,      // 몽환
-  focused,     // 집중
+  sentimental,
+  joyful,
+  calm,
+  energetic,
+  dreamy,
+  focused,
 }
 
+enum VibeRarity { common, uncommon, rare }
+
 class VibeMoodStyle {
-  final String label;           // 한글 라벨
-  final String englishLabel;    // 영수증 상단 노출용 영문
+  final String label;
+  final String englishLabel;
   final Color gradientStart;
   final Color gradientEnd;
   final List<String> phrases;
+  final VibeRarity rarity;
+  final String rarityStars;
+  final String rarityPercent;
 
   const VibeMoodStyle({
     required this.label,
@@ -24,6 +27,9 @@ class VibeMoodStyle {
     required this.gradientStart,
     required this.gradientEnd,
     required this.phrases,
+    required this.rarity,
+    required this.rarityStars,
+    required this.rarityPercent,
   });
 
   LinearGradient get gradient => LinearGradient(
@@ -33,13 +39,15 @@ class VibeMoodStyle {
       );
 }
 
-/// 각 무드에 매핑된 스타일 + 감성 문구 사전
 const Map<VibeMood, VibeMoodStyle> vibeMoodStyles = {
   VibeMood.sentimental: VibeMoodStyle(
     label: '감성',
     englishLabel: 'SENTIMENTAL',
-    gradientStart: Color(0xFFE8D5F2), // 라벤더
-    gradientEnd: Color(0xFFFAD4D4),   // 더스티 로즈
+    gradientStart: Color(0xFFE8D5F2),
+    gradientEnd: Color(0xFFFAD4D4),
+    rarity: VibeRarity.uncommon,
+    rarityStars: '★★',
+    rarityPercent: '전체 측정 중 약 18%만 나와요',
     phrases: [
       '창밖의 노을이 조용히 번지는 순간',
       '오래된 LP가 생각나는 잔잔한 공기',
@@ -54,8 +62,11 @@ const Map<VibeMood, VibeMoodStyle> vibeMoodStyles = {
   VibeMood.joyful: VibeMoodStyle(
     label: '즐거움',
     englishLabel: 'JOYFUL',
-    gradientStart: Color(0xFFFFF3B0), // 버터 옐로우
-    gradientEnd: Color(0xFFFFCFA5),   // 피치 오렌지
+    gradientStart: Color(0xFFFFF3B0),
+    gradientEnd: Color(0xFFFFCFA5),
+    rarity: VibeRarity.common,
+    rarityStars: '★',
+    rarityPercent: '자주 만날 수 있는 무드예요',
     phrases: [
       '햇살이 쏟아지는 완벽한 오후',
       '웃음이 절로 새어 나오는 시간',
@@ -70,8 +81,11 @@ const Map<VibeMood, VibeMoodStyle> vibeMoodStyles = {
   VibeMood.calm: VibeMoodStyle(
     label: '차분',
     englishLabel: 'CALM',
-    gradientStart: Color(0xFFD6F2E6), // 민트
-    gradientEnd: Color(0xFFCDE7F5),   // 스카이블루
+    gradientStart: Color(0xFFD6F2E6),
+    gradientEnd: Color(0xFFCDE7F5),
+    rarity: VibeRarity.common,
+    rarityStars: '★',
+    rarityPercent: '자주 만날 수 있는 무드예요',
     phrases: [
       '숨이 깊어지는 조용한 시간',
       '잔잔한 물결 같은 오전의 공기',
@@ -86,8 +100,11 @@ const Map<VibeMood, VibeMoodStyle> vibeMoodStyles = {
   VibeMood.energetic: VibeMoodStyle(
     label: '활기',
     englishLabel: 'ENERGETIC',
-    gradientStart: Color(0xFFFFC2B4), // 코랄
-    gradientEnd: Color(0xFFFFA5C0),   // 살몬 핑크
+    gradientStart: Color(0xFFFFC2B4),
+    gradientEnd: Color(0xFFFFA5C0),
+    rarity: VibeRarity.uncommon,
+    rarityStars: '★★',
+    rarityPercent: '전체 측정 중 약 15%만 나와요',
     phrases: [
       '심장 박동이 음악에 맞춰지는 밤',
       '에너지가 공기 중에 팽팽한 순간',
@@ -102,8 +119,11 @@ const Map<VibeMood, VibeMoodStyle> vibeMoodStyles = {
   VibeMood.dreamy: VibeMoodStyle(
     label: '몽환',
     englishLabel: 'DREAMY',
-    gradientStart: Color(0xFFE0C9F5), // 라일락
-    gradientEnd: Color(0xFFFAD0E8),   // 베이비 핑크
+    gradientStart: Color(0xFFE0C9F5),
+    gradientEnd: Color(0xFFFAD0E8),
+    rarity: VibeRarity.rare,
+    rarityStars: '★★★',
+    rarityPercent: '전체 측정 중 약 10%만 나와요',
     phrases: [
       '꿈과 현실의 경계가 흐려지는 새벽',
       '별이 가라앉는 듯한 어두운 공기',
@@ -118,8 +138,11 @@ const Map<VibeMood, VibeMoodStyle> vibeMoodStyles = {
   VibeMood.focused: VibeMoodStyle(
     label: '집중',
     englishLabel: 'FOCUSED',
-    gradientStart: Color(0xFFF5F1E8), // 크림
-    gradientEnd: Color(0xFFDDE1E5),   // 라이트 그레이
+    gradientStart: Color(0xFFF5F1E8),
+    gradientEnd: Color(0xFFDDE1E5),
+    rarity: VibeRarity.uncommon,
+    rarityStars: '★★',
+    rarityPercent: '전체 측정 중 약 22%만 나와요',
     phrases: [
       '키보드 소리만이 존재감을 가지는 시간',
       '몰입의 결이 가장 선명한 공간',

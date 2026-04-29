@@ -37,6 +37,8 @@ dependencies:
   # 유틸
   intl: ^0.19.0
   shared_preferences: ^2.3.2
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
 
 dev_dependencies:
   flutter_test:
@@ -54,7 +56,9 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#F7F5F0"
+  color_dark: "#F7F5F0"
   image: assets/images/ic_splah.png
+  image_dark: assets/images/ic_splah.png
   android: true
   ios: true
   fullscreen: false

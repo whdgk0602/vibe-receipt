@@ -67,7 +67,8 @@ class HistoryService {
       final docs = await getApplicationDocumentsDirectory();
       final dir = Directory(p.join(docs.path, 'history_photos'));
       await dir.create(recursive: true);
-      final dest = p.join(dir.path, p.basename(srcPath));
+      final ext = p.extension(srcPath).isNotEmpty ? p.extension(srcPath) : '.jpg';
+      final dest = p.join(dir.path, 'photo_${DateTime.now().millisecondsSinceEpoch}$ext');
       await src.copy(dest);
       return dest;
     } catch (_) {

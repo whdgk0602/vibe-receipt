@@ -30,7 +30,10 @@ class HistoryScreen extends ConsumerWidget {
         appBar: AppBar(
           title: Text(
             '내 영수증 아카이브',
-            style: GoogleFonts.vt323(fontSize: 26, letterSpacing: 1.5),
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           bottom: TabBar(
             labelStyle: GoogleFonts.notoSansKr(
@@ -261,6 +264,7 @@ class _CollectionTab extends StatelessWidget {
     final uniquePlaces = history.map((r) => r.data.placeName).toSet().length;
     final unlockedCount = moodCounts.keys.length;
     final allUnlocked = unlockedCount == VibeMood.values.length;
+    final streak = _computeStreak(history);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -277,7 +281,11 @@ class _CollectionTab extends StatelessWidget {
                     .reduce((a, b) => a.value >= b.value ? a : b)
                     .key,
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 12),
+
+          // 스트릭 배너
+          _StreakBanner(streak: streak),
+          const SizedBox(height: 16),
 
           // 컬렉션 완성 배너
           if (allUnlocked) ...[
@@ -348,6 +356,160 @@ class _CollectionTab extends StatelessWidget {
               ),
             ),
           ],
+
+          const SizedBox(height: 28),
+
+          // 마일스톤 배지
+          Text(
+            '마일스톤',
+            style: GoogleFonts.notoSansKr(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...milestones.map((m) {
+            final unlocked = history.length >= m.count;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: unlocked
+                      ? AppColors.surface
+                      : AppColors.surface.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: unlocked
+                        ? const Color(0xFFE8C96C)
+                        : AppColors.divider,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      m.icon,
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: unlocked ? null : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            m.label,
+                            style: GoogleFonts.notoSansKr(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: unlocked
+                                  ? AppColors.primary
+                                  : AppColors.secondary,
+                            ),
+                          ),
+                          Text(
+                            m.desc,
+                            style: GoogleFonts.notoSansKr(
+                              fontSize: 11,
+                              color: AppColors.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (unlocked)
+                      const Icon(Icons.check_circle_rounded,
+                          color: Color(0xFFE8C96C), size: 20)
+                    else
+                      Text(
+                        '${m.count}장',
+                        style: AppTheme.receiptFont(
+                          size: 12,
+                          color: AppColors.secondary,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _StreakBanner extends StatelessWidget {
+  final int streak;
+
+  const _StreakBanner({required this.streak});
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = streak > 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: isActive
+            ? const LinearGradient(
+                colors: [Color(0xFFFFE5B4), Color(0xFFFFF3B0)],
+              )
+            : null,
+        color: isActive ? null : AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isActive ? const Color(0xFFE8C96C) : AppColors.divider,
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            isActive ? '🔥' : '💤',
+            style: const TextStyle(fontSize: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isActive ? '$streak일 연속 측정 중!' : '오늘의 바이브를 측정해봐요',
+                  style: GoogleFonts.notoSansKr(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+                if (isActive)
+                  Text(
+                    streak >= 7
+                        ? '대단해요! 한 주를 꽉 채웠어요'
+                        : '매일 측정하면 스트릭이 쌓여요',
+                    style: GoogleFonts.notoSansKr(
+                      fontSize: 11,
+                      color: AppColors.secondary,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (isActive)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8C96C),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '$streak',
+                style: AppTheme.receiptFont(
+                    size: 16, weight: FontWeight.w700),
+              ),
+            ),
         ],
       ),
     );
@@ -452,7 +614,7 @@ class _MoodStamp extends StatelessWidget {
         children: [
           if (unlocked)
             Text(
-              '${count}회',
+              '$count회',
               style: AppTheme.receiptFont(
                 size: 10,
                 color: AppColors.primary.withValues(alpha: 0.6),
@@ -481,6 +643,48 @@ class _MoodStamp extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─── 마일스톤 정의 ────────────────────────────────────────────────────
+
+const milestones = [
+  (count: 1, label: 'Drifter', icon: '✦', desc: '첫 번째 영수증 발급'),
+  (count: 10, label: 'Seeker', icon: '✦', desc: '10장 달성'),
+  (count: 25, label: 'Keeper', icon: '✦', desc: '25장 달성'),
+  (count: 50, label: 'Oracle', icon: '✦', desc: '50장 달성'),
+];
+
+// ─── 스트릭 계산 ──────────────────────────────────────────────────────
+
+int _computeStreak(List<ReceiptModel> history) {
+  if (history.isEmpty) return 0;
+
+  final dates = history
+      .map((r) {
+        final d = r.data.measuredAt;
+        return DateTime(d.year, d.month, d.day);
+      })
+      .toSet()
+      .toList()
+    ..sort((a, b) => b.compareTo(a)); // 최신순
+
+  final today = DateTime.now();
+  final todayDate = DateTime(today.year, today.month, today.day);
+  final yesterday = todayDate.subtract(const Duration(days: 1));
+
+  // 오늘 또는 어제부터 시작하지 않으면 스트릭 없음
+  if (dates.first != todayDate && dates.first != yesterday) return 0;
+
+  int streak = 1;
+  for (int i = 1; i < dates.length; i++) {
+    final expected = dates[i - 1].subtract(const Duration(days: 1));
+    if (dates[i] == expected) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
 }
 
 // ─── 공통 Empty State ────────────────────────────────────────────────
@@ -528,7 +732,10 @@ class PlaceDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(
           placeName,
-          style: GoogleFonts.vt323(fontSize: 22),
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: Column(
@@ -777,22 +984,21 @@ class _HistoryDetailScreenState
     Navigator.of(context).pop();
     final currentTheme = ref.read(receiptThemeProvider);
 
-    final bytes = await ScreenshotController().captureFromWidget(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: StoryFrameWidget(
-            receipt: widget.receipt,
-            theme: currentTheme,
-          ),
-        ),
-      ),
-      delay: const Duration(milliseconds: 150),
-      pixelRatio: 2.0,
-    );
-    await _exportService.share(bytes,
-        text: '나의 오늘 공간 바이브 🧾 #VibeReceipt');
+    try {
+      final bytes = await ScreenshotController().captureFromWidget(
+        StoryFrameWidget(receipt: widget.receipt, theme: currentTheme),
+        delay: const Duration(milliseconds: 150),
+        pixelRatio: 2.0,
+        context: context,
+      );
+      await _exportService.share(bytes,
+          text: '나의 오늘 공간 바이브 🧾 #VibeReceipt');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('스토리 이미지 생성에 실패했어요')),
+      );
+    }
   }
 
   Future<void> _shareText() async {
@@ -809,7 +1015,10 @@ class _HistoryDetailScreenState
       appBar: AppBar(
         title: Text(
           widget.receipt.data.placeName,
-          style: GoogleFonts.vt323(fontSize: 22),
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: SafeArea(

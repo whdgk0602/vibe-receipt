@@ -6,10 +6,11 @@ import '../data/models/receipt_model.dart';
 import '../data/models/vibe_data.dart';
 import '../data/services/light_service.dart';
 import '../data/services/noise_service.dart';
+import '../data/services/notification_service.dart';
 import '../data/services/vibe_matcher.dart';
 import 'history_provider.dart';
 
-enum MeasureStatus { idle, measuring, success, error, permissionDenied }
+enum MeasureStatus { idle, measuring, success, error }
 
 class VibeState {
   final MeasureStatus status;
@@ -76,26 +77,31 @@ class VibeNotifier extends StateNotifier<VibeState> {
     }
 
     final mic = await PermissionHelper.ensureMicrophone();
-    if (!mic) {
-      state = state.copyWith(
-        status: MeasureStatus.permissionDenied,
-        errorMessage: '마이크 권한이 필요합니다.',
-      );
-      return;
-    }
 
     state = state.copyWith(status: MeasureStatus.measuring, clearError: true);
 
     try {
-      final results = await Future.wait([
-        _lightService.measureAverage(duration: const Duration(seconds: 3)),
-        _noiseService.measureAverage(duration: const Duration(seconds: 4)),
-      ]);
+      double lux;
+      double decibel;
+
+      if (mic) {
+        final results = await Future.wait([
+          _lightService.measureAverage(duration: const Duration(seconds: 3)),
+          _noiseService.measureAverage(duration: const Duration(seconds: 4)),
+        ]);
+        lux = results[0];
+        decibel = results[1];
+      } else {
+        // mic permission denied — measure light only, treat noise as silent
+        lux = await _lightService.measureAverage(
+            duration: const Duration(seconds: 3));
+        decibel = -1;
+      }
 
       final data = VibeData(
         placeName: state.placeName.trim(),
-        lux: results[0],
-        decibel: results[1],
+        lux: lux,
+        decibel: decibel,
         measuredAt: DateTime.now(),
         photo: state.photo,
         comment:
@@ -105,6 +111,9 @@ class VibeNotifier extends StateNotifier<VibeState> {
       final receipt = _matcher.buildReceipt(data);
       state = state.copyWith(status: MeasureStatus.success, receipt: receipt);
       await _history.add(receipt);
+      try {
+        await NotificationService.onMeasuredToday();
+      } catch (_) {}
     } catch (e) {
       state = state.copyWith(
         status: MeasureStatus.error,

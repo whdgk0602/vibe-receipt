@@ -79,10 +79,11 @@ class AppTheme {
     double size = 28,
     Color color = AppColors.primary,
   }) {
-    return GoogleFonts.vt323(
+    return GoogleFonts.playfairDisplay(
       fontSize: size,
+      fontWeight: FontWeight.w700,
       color: color,
-      letterSpacing: 1.2,
+      letterSpacing: 0.5,
     );
   }
 }

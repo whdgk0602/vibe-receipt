@@ -42,11 +42,12 @@ class StoryFrameWidget extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(32, 60, 32, 0),
               child: Text(
-                'VIBE RECEIPT',
-                style: GoogleFonts.vt323(
-                  fontSize: 26,
+                'Vibe Receipt',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
                   color: const Color(0xFF2B2B2B).withValues(alpha: 0.4),
-                  letterSpacing: 6,
+                  letterSpacing: 1,
                 ),
               ),
             ),

@@ -12,10 +12,10 @@ class TimeHelper {
 
   static TimeBand bandOf(DateTime now) {
     final h = now.hour;
-    if (h >= 0 && h <= 5) return TimeBand.dawn;
-    if (h >= 6 && h <= 10) return TimeBand.morning;
-    if (h >= 11 && h <= 16) return TimeBand.day;
-    if (h >= 17 && h <= 20) return TimeBand.evening;
+    if (h <= 5) return TimeBand.dawn;
+    if (h <= 10) return TimeBand.morning;
+    if (h <= 16) return TimeBand.day;
+    if (h <= 20) return TimeBand.evening;
     return TimeBand.latenight;
   }
 

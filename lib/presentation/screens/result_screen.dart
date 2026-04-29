@@ -4,12 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:screenshot/screenshot.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/vibe_phrases.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data/models/receipt_model.dart';
 import '../../data/services/image_export_service.dart';
+import '../../providers/history_provider.dart';
 import '../../providers/receipt_theme_provider.dart';
 import '../../providers/vibe_provider.dart';
 import '../widgets/receipt_widget.dart';
 import '../widgets/story_frame_widget.dart';
+import 'history_screen.dart' show milestones;
 
 class ResultScreen extends ConsumerStatefulWidget {
   const ResultScreen({super.key});
@@ -25,6 +29,7 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
 
   late final AnimationController _animController;
   late final Animation<Offset> _slideAnim;
+  bool _showRarityBanner = false;
 
   @override
   void initState() {
@@ -42,6 +47,10 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
     ));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animController.forward();
+      _checkMilestone();
+      Future.delayed(const Duration(milliseconds: 1400), () {
+        if (mounted) setState(() => _showRarityBanner = true);
+      });
     });
   }
 
@@ -49,6 +58,80 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
   void dispose() {
     _animController.dispose();
     super.dispose();
+  }
+
+  void _checkMilestone() {
+    final count = ref.read(historyProvider).length;
+    final hit = milestones.where((m) => m.count == count).firstOrNull;
+    if (hit == null || !mounted) return;
+
+    final isFirst = count == 1;
+
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(hit.icon, style: const TextStyle(fontSize: 48)),
+              const SizedBox(height: 12),
+              Text(
+                '${hit.label} 달성!',
+                style: GoogleFonts.notoSansKr(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isFirst
+                    ? '첫 번째 영수증이 발급됐어요\n지금 바로 공유해볼까요?'
+                    : hit.desc,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.notoSansKr(
+                  fontSize: 13,
+                  color: AppColors.secondary,
+                  height: 1.6,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            if (isFirst)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _onShare();
+                },
+                child: Text(
+                  '지금 공유하기',
+                  style: GoogleFonts.notoSansKr(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                isFirst ? '나중에' : '확인',
+                style: GoogleFonts.notoSansKr(
+                  fontWeight: FontWeight.w700,
+                  color: isFirst ? AppColors.secondary : AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Future<void> _onSave() async {
@@ -89,20 +172,21 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
     if (receipt == null) return;
     final currentTheme = ref.read(receiptThemeProvider);
 
-    final bytes = await ScreenshotController().captureFromWidget(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: StoryFrameWidget(receipt: receipt, theme: currentTheme),
-        ),
-      ),
-      delay: const Duration(milliseconds: 150),
-      pixelRatio: 2.0,
-    );
-    await _exportService.share(bytes,
-        text: '나의 오늘 공간 바이브 🧾 #VibeReceipt');
+    try {
+      final bytes = await ScreenshotController().captureFromWidget(
+        StoryFrameWidget(receipt: receipt, theme: currentTheme),
+        delay: const Duration(milliseconds: 150),
+        pixelRatio: 2.0,
+        context: context,
+      );
+      await _exportService.share(bytes,
+          text: '나의 오늘 공간 바이브 🧾 #VibeReceipt');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('스토리 이미지 생성에 실패했어요')),
+      );
+    }
   }
 
   Future<void> _shareText() async {
@@ -130,14 +214,17 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Your Vibe Receipt',
-          style: GoogleFonts.vt323(fontSize: 24, letterSpacing: 2),
+          'Vibe Receipt',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         actions: [
           IconButton(
             onPressed: _onRestart,
-            icon: const Icon(Icons.refresh),
-            tooltip: '다시 측정',
+            icon: const Icon(Icons.home_rounded),
+            tooltip: '홈으로',
           ),
         ],
       ),
@@ -155,6 +242,14 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
                     child: ReceiptWidget(receipt: receipt, theme: theme),
                   ),
                 ),
+              ),
+            ),
+            AnimatedOpacity(
+              opacity: _showRarityBanner ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 400),
+              child: _RarityBanner(
+                receipt: receipt,
+                onShare: _onShare,
               ),
             ),
             Padding(
@@ -244,6 +339,81 @@ class _ShareSheet extends StatelessWidget {
               title: '텍스트 공유',
               subtitle: '카카오톡·문자에 텍스트 카드로 공유해요',
               onTap: onTextShare,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── 희귀도 배너 ──────────────────────────────────────────────────────
+
+class _RarityBanner extends StatelessWidget {
+  final ReceiptModel receipt;
+  final VoidCallback onShare;
+
+  const _RarityBanner({required this.receipt, required this.onShare});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = receipt.style;
+    if (style.rarity == VibeRarity.common) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+        decoration: BoxDecoration(
+          gradient: style.gradient,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.07),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${style.rarityStars}  ${style.englishLabel}',
+                    style: AppTheme.receiptFont(
+                      size: 11,
+                      letterSpacing: 2,
+                      weight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    style.rarityPercent,
+                    style: GoogleFonts.notoSansKr(
+                      fontSize: 11,
+                      color: AppColors.primary.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: onShare,
+              style: TextButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                backgroundColor: Colors.black.withValues(alpha: 0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                '공유하기',
+                style: GoogleFonts.notoSansKr(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
           ],
         ),
